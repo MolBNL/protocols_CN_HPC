@@ -1,0 +1,22 @@
+
+
+
+
+
+
+
+
+read_restart  s04_NPTeq3.lmprst
+include 00_setup_system.lmp
+
+thermo_style custom step temp ebond eangle edihed eimp epair evdwl ecoul elong etail pe vol density lx ly lz 
+
+variable step string "s05_NPTeq4"
+variable nsToRun equal 5
+
+fix fix_move all npt temp ${T} ${T} $(100.0*dt) aniso $(v_ambpres) $(v_ambpres) $(1000.0*v_dt)
+dump dumpXTC all xtc     $(v_ThermoOut*10)  ${step}.xtc
+dump dumpTRJ all custom  $(v_ThermoOut*10*5)  ${step}.lammpstrj id type x y z vx vy vz ix iy iz 
+log  ${step}.lmplog  
+run $(v_nsToRun/0.001/v_dt)
+write_restart 	${step}.lmprst

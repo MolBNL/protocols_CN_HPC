@@ -1,0 +1,75 @@
+read_restart  ../02_equilibrate/s05_NPTeq4.lmprst
+include ./00_setup_system.lmp
+
+variable    nevery equal 5                  # sample interval
+variable    nrep equal 1e3                  # num of correlation windows to accumulate
+variable    nfreq equal ${nrep}*${nevery}   # how often the correlation is computed (used also as dump interval)
+
+variable ns_to_run  equal 2.0               # how much to run for each loop
+variable n loop 5                           # repeat the computation this number of times
+
+
+
+
+
+variable kB equal 8.61733326e-5    # Boltzmann in eV/K
+variable eV_to_J equal 1.60218e-19
+variable psec_to_s equal 1e-12
+variable ang_to_m equal 1e-10
+variable convert equal ${eV_to_J}/${psec_to_s}/${ang_to_m}
+
+
+# SET THE CALCULATIONS FOR TC
+thermo	        ${nfreq}
+
+compute         myKE all ke/atom
+compute         myPE all pe/atom
+compute         myStress all stress/atom NULL virial
+# should use centroid/stress/atom, but it's not yet implemented for simulations with the TERSOFF forcefield
+# (see the LAMMPS documentation for updates on that)
+
+# heat/flux calculates a global vector of length 6.
+# The first 3 components are the full heat flux vector (without the volume term).
+# The next 3 components are just the convective portion of the flux.
+compute         flux all heat/flux myKE myPE myStress
+# heat/flux UNITS will be: energy*velocity, missing the volume term;
+# once divided by a volume the units will be that of flux: energy/area/time
+variable        Jx equal c_flux[1]/vol
+variable        Jy equal c_flux[2]/vol
+variable        Jz equal c_flux[3]/vol
+
+fix fix_move all nvt temp ${T} ${T} $(100.0*dt)
+#fix fix_move all nve
+
+
+# START THE LOOP OF SIMULATIONS
+label here
+variable step string "GKcalc_nvt.step_${n}"
+log  ${step}.lmplog
+
+reset_timestep  0
+velocity        all scale $T 
+velocity        all zero linear
+velocity        all zero angular
+
+# note that the autocorrelation is computed for the c_flux values, not for the v_Js
+# so the volume term is not included, and should be added in the final computation
+fix JJ all ave/correlate    ${nevery} ${nrep} ${nfreq} c_flux[1] c_flux[2] c_flux[3] &
+                            type auto file ${step}.autocorrelation.dat ave running
+
+variable        kB_T2 equal ${kB}*${T}*${T}
+variable        trap_ts_norm equal ${nevery}*${dt}
+
+variable        k11 equal trap(f_JJ[3])*${trap_ts_norm}/${kB_T2}/vol*${convert}
+variable        k22 equal trap(f_JJ[4])*${trap_ts_norm}/${kB_T2}/vol*${convert}
+variable        k33 equal trap(f_JJ[5])*${trap_ts_norm}/${kB_T2}/vol*${convert}
+variable        kappa equal (v_k11+v_k22+v_k33)/3.0
+variable        kappa_from_example equal (v_kappa*v_eV_to_J)
+
+thermo_style    custom step temp pe vol v_Jx v_Jy v_Jz v_k11 v_k22 v_k33 v_kappa v_kappa_from_example
+run $(v_ns_to_run/0.001/v_dt)
+unfix JJ
+
+next n
+jump SELF   here
+

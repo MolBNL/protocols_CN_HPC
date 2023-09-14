@@ -1,0 +1,29 @@
+units metal
+newton on
+atom_style full
+
+dimension 3
+boundary p p p
+
+thermo 1
+
+read_data ../00_prepare_lmpdata/graphene_paraffin.lmpdata
+include 00_setup_system.lmp
+
+thermo_style custom step temp ebond eangle edihed eimp epair evdwl ecoul elong etail pe vol density lx ly lz 
+
+dump dumpTRJ all custom  1000000000  s00_min.lammpstrj id type x y z vx vy vz ix iy iz 
+minimize 1.0e-6 1.0e-6 1000 10000
+undump dumpTRJ
+
+variable step string "s01_NVTeq1"
+variable nsToRun equal 0.01
+
+fix fix_move all nvt temp ${T} ${T} $(100.0*v_dt)  
+dump dumpXTC all xtc     $(v_ThermoOut*10)  ${step}.xtc
+dump dumpTRJ all custom  $(v_ThermoOut*10*2)  ${step}.lammpstrj id type x y z vx vy vz ix iy iz 
+log  ${step}.lmplog  
+run $(v_nsToRun/0.001/v_dt)
+undump dumpXTC
+undump dumpTRJ
+write_restart 	${step}.lmprst

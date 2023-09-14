@@ -1,0 +1,115 @@
+LAMMPS (2 Aug 2023)
+  using 1 OpenMP thread(s) per MPI task
+package omp 1
+using multi-threaded neighbor list subroutines
+read_restart  ../01_simulate/s05_NPTeq4.lmprst
+Reading restart file ...
+  restart file = 2 Aug 2023, LAMMPS = 2 Aug 2023
+  restoring atom style full from restart
+  orthogonal box = (-25.286616 -24.091908 17.877507) to (25.286616 24.091908 66.930093)
+  2 by 2 by 2 MPI processor grid
+  pair style hybrid stores no restart info
+  restoring bond style harmonic/omp from restart
+  restoring angle style harmonic/omp from restart
+  restoring dihedral style multi/harmonic/omp from restart
+  12312 atoms
+  9516 bonds
+  18720 angles
+  34632 dihedrals
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        0        0.5     
+  special bond factors coul:  0        0        0.833   
+     4 = max # of 1-2 neighbors
+     6 = max # of 1-3 neighbors
+    12 = max # of 1-4 neighbors
+    16 = max # of special neighbors
+  special bonds CPU = 0.002 seconds
+  read_restart CPU = 0.018 seconds
+include ./00_setup_system.lmp
+#####COMMON SYMULATIONS SETTINGS#####
+
+variable    T equal 450.0
+variable    dt equal 0.001
+
+variable    ambpres equal 1.01325
+variable    ThermoOut equal 1000
+
+bond_style harmonic
+angle_style harmonic
+dihedral_style multi/harmonic
+special_bonds lj 0.0 0.0 0.5 coul 0.0 0.0 0.833
+
+bond_coeff 1  13.0481 1.5375
+bond_coeff 2  14.3364 1.0969
+
+angle_coeff 1  2.72762 111.51
+angle_coeff 2  1.70855 107.58
+angle_coeff 3  2.00777 109.80
+
+dihedral_coeff 1  0.00780554 -0.0234166 0.0 0.031222 0.0
+dihedral_coeff 2  0.00693826 -0.0208148 0.0 0.027753 0.0
+dihedral_coeff 3  0.00650462 -0.0195138 0.0 0.026019 0.0
+
+
+pair_style hybrid tersoff lj/cut/coul/long 9.0 9.0
+pair_modify tail yes mix arithmetic
+
+pair_coeff 1 1 lj/cut/coul/long 0.00474404   3.3996700
+pair_coeff 2 2 lj/cut/coul/long 0.00068082   2.6495300
+#lj interactions for graphene-paraffin
+pair_coeff 1 3 lj/cut/coul/long 0.00464914   3.62533
+pair_coeff 2 3 lj/cut/coul/long 0.00176123   3.25026
+pair_coeff * * tersoff SiCGe.tersoff NULL NULL C
+Reading tersoff potential file SiCGe.tersoff with DATE: 2009-03-18
+
+kspace_style pppm 1.0e-5
+
+timestep     ${dt}
+timestep     0.001
+thermo       ${ThermoOut}
+thermo       1000
+
+variable lnum equal 20
+variable freq equal 200
+variable dir index x
+
+variable ns_of_eq equal 2.0 # 2.0
+variable ns_for_k equal 3.0 # 3.0
+
+##################### SETUP CALCULATIONS, you should not need to change anything below this point
+
+variable eV_to_J equal 1.60218e-19
+variable psec_to_s equal 1e-12
+variable ang_to_m equal 1e-10
+
+variable converter equal ${eV_to_J}/${psec_to_s}/${ang_to_m}
+variable converter equal 1.60218e-19/${psec_to_s}/${ang_to_m}
+variable converter equal 1.60218e-19/1e-12/${ang_to_m}
+variable converter equal 1.60218e-19/1e-12/1e-10
+
+if "${dir} == x" then   "variable Lb equal lx"   "variable area equal ly*lz" elif "${dir} == y"   "variable Lb equal ly"   "variable area equal lx*lz" elif "${dir} == z"   "variable Lb equal lz"   "variable area equal lx*ly" else   "print 'you must select x/y/z as direction...'"   "quit 1"
+variable Lb equal ly
+variable area equal lx*lz
+
+variable middleval equal floor(${lnum}/2)+1
+variable middleval equal floor(20/2)+1
+variable lsize equal ${Lb}/${lnum}
+variable lsize equal 48.1838169783126/${lnum}
+variable lsize equal 48.1838169783126/20
+
+# group paraffinC type 1
+# group paraffinH type 2
+# group grapheneC type 3
+group CC type 1 3
+5760 atoms in group CC
+
+# assign to each atom an ID based on the chunk it is in
+compute chunkID all chunk/atom bin/1d ${dir} lower ${lsize} units box
+compute chunkID all chunk/atom bin/1d y lower ${lsize} units box
+compute chunkID all chunk/atom bin/1d y lower 2.40919084891563 units box
+
+########################### EQUILIBRATE THE HEAT FLUX #########################
+variable step string "s01_eq_heat_flux"
+log  ${step}.dir_${dir}.lmplog
+log  s01_eq_heat_flux.dir_${dir}.lmplog
+log  s01_eq_heat_flux.dir_y.lmplog
