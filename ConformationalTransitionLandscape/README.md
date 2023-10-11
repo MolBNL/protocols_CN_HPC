@@ -19,9 +19,9 @@ The contact map distances will be used as collective variables (CVs) for the con
 
 To determine the unique contacts in each structure, the distance between each couple of atoms in each structure has to be computed. If such distance is less than a defined cutoff in a system, while greater than the cutoff in the others, the contact is considered unique. Only non-adjacent residues should be considered.
 Once the unique contacts, that caracterize a reference structure, are identified, the contact map can be calculated. The contact map for the $i^{th}$ reference structure can be defined as:
-$$ CM_i=\frac{1}{N}\sum_{\gamma}^N [D_\gamma(R) - D_\gamma(R_i)]^2 $$
+$$CM_i=\frac{1}{N}\sum_{\gamma}^N [D_\gamma(R) - D_\gamma(R_i)]^2$$
 where $N$ is a normalization constant and $D_\gamma(R)$ is a sigmoidal function defining the formation of the contact, as
-$$ D_\gamma(R)=\frac{1-(\frac{r_\gamma}{r_{\gamma,0}})^6}{1-(\frac{r_\gamma}{r_{\gamma,0}})^10} $$
+$$D_\gamma(R)=\frac{1-(\frac{r_\gamma}{r_{\gamma,0}})^6}{1-(\frac{r_\gamma}{r_{\gamma,0}})^10}$$
 , where $r_{\gamma,0}$ is the contact distance in the reference structure in which the contact is unique.
 
 A python script that create such contact maps for a list of reference structures, can be found in the [Data](Data) directory ([01_cmap_preparation.py](Data/01_cmap_preparation.py)). The script is also able to identify different types of interactions between atoms, with different cutoff values for each interaction. Different interaction types are also weighted differently in the creation of the CV. 
