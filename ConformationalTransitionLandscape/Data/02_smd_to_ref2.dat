@@ -1,0 +1,18 @@
+UNITS LENGTH=A TIME=ns ENERGY=kcal/mol
+
+# each file will define a contact map, with a proper label that will be used in the metad section
+#INCLUDE FILE=../cmap_ref1.dat
+INCLUDE FILE=../cmap_ref2.dat
+#INCLUDE FILE=../cmap_ref3.dat
+
+smd: MOVINGRESTRAINT ...
+  ARG=c_ref2 
+  STEP0=0       AT0=1.0      KAPPA0=50.0 
+  STEP1=50000000  AT1=0.0 
+...
+
+PRINT STRIDE=5000 ARG=* FILE=COLVAR
+
+
+
+

@@ -1,0 +1,7 @@
+UNITS LENGTH=A TIME=ns ENERGY=kcal/mol
+
+INCLUDE FILE=cmap_ref1.dat
+INCLUDE FILE=cmap_ref2.dat
+INCLUDE FILE=cmap_ref3.dat
+
+PRINT STRIDE=1 ARG=c_ref1,c_ref2,c_ref3 FILE=metad_results.dat

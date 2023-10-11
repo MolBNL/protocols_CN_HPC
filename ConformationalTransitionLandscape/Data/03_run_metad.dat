@@ -1,0 +1,25 @@
+UNITS LENGTH=A TIME=ns ENERGY=kcal/mol
+
+# each file will define a contact map, with a proper label that will be used in the metad section
+INCLUDE FILE=../cmap_ref1.dat
+INCLUDE FILE=../cmap_ref2.dat
+INCLUDE FILE=../cmap_ref3.dat
+
+metad: METAD ...
+  ARG=c_ref1,c_ref1,c_ref1
+  SIGMA=0.005,0.005,0.005
+  HEIGHT=1.0
+  BIASFACTOR=12.0
+  TEMP=@replicas:300.0,302.5,305.1,307.7,310.3,313.0,315.6,318.3,321.0,323.7,326.5,329.3,332.1,334.9,337.7,340.6,343.5,346.4,349.4,352.3,355.3,358.3,361.4,364.5,367.6,370.7,373.8,377.0,380.2,383.5,386.7,390.0
+  PACE=500         
+  GRID_MIN=0.0,0.0,0.0
+  GRID_MAX=1.0,1.0,1.0
+  #CALC_RCT
+  #RCT_USTRIDE=10
+  FILE=HILLS
+...
+
+PRINT STRIDE=500 ARG=c_ref*,metad.* FILE=COLVAR
+
+
+

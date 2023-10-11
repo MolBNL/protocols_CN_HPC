@@ -1,0 +1,26 @@
+Minimize all
+ &cntrl   
+
+  ! Minimization options
+  imin = 1,                         ! Turn on minimization
+  ntmin = 1,	                    ! [1, def] ncyc of SD, then CG; [2] full SD, [0] full CG (4 cyc of SD)
+  maxcyc = 10000,                   ! Maximum number of minimization cycles
+  ncyc = 5000,                      ! SteepestDesc (SD) to ConjGrad (CG)  
+  
+  ! Potential energy function options
+  cut = 10.0,                       ! nonbonded cutoff, in angstroms, def 8.0  
+  
+  ! Control how information is printed to the output file
+  ntpr = 100,                       ! every n steps to output/info 
+  ntxo = 2,                         ! [2] use netCDF for restart, [1] use formatted txt   
+
+  ! Restraint options
+  ntr = 0, 			                ! activate positional restraints                                      
+  restraint_wt = 0,                 ! positional restraint constant	                                                          
+  restraintmask = '!:WAT,Na+,Cl- & @C,CA,O,N',  
+  nmropt = 0,                       ! NMR restraints will be read
+ /                                                                             
+                                                                  
+ &wt TYPE = 'END'                                                                
+ /                                                                             
+
