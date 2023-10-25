@@ -1,5 +1,5 @@
 # Project description
-In this protocol, we'll simulate the scratching of a silica tip on an alumina ($\textnormal{Al}_\textnormal{2}\textnormal{O}_\textnormal{3}$) surface, representing an atomic force microscopy setup. The friction of the tip on the surface at different indentations of the tip will be computed.
+In this protocol, we'll simulate the scratching of a silica tip on an alumina ($\mathrm{Al_2O_3}$) surface, representing an atomic force microscopy setup. The friction of the tip on the surface at different indentations of the tip will be computed.
 
 The protocol is divided into different steps, and an illustrative bash script that can be used to run all the steps sequentially can be found in the [data](./data) directory.
 
@@ -11,7 +11,7 @@ All scripts expect the following subdirectories to be present:
 - FF, where the comb3 forcefield files can be found
 
 ## STEP 01
-Firstly, the alumina ($\textnormal{Al}_\textnormal{2}\textnormal{O}_\textnormal{3}$) surface is created, starting from the alumina lattice information. 
+Firstly, the alumina ($\mathrm{Al_2O_3}$) surface is created, starting from the alumina lattice information. 
 The user can modify the script [01_create_box_and_surf.lmpin](./data/01_create_box_and_surf.lmpin) to adjust the dimensions of the surface.
 
 ## STEP 02 to 05
