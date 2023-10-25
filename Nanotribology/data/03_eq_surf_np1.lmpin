@@ -1,0 +1,30 @@
+print """
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+                       FIRST EQ THE SURFACE IN NPT CONDITIONS, WITH TIGHT COUPLING
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+"""
+
+read_restart      ./Surf/02_min_surf.lmprst
+include           00_setup_system.lmpin
+include           00_setup_surf.lmpin
+# increase the number of steps as needed to equilibrate properly the system
+reset_timestep 0
+variable nstep_run    equal 1500
+variable nstep_output equal 50 
+variable basename string "./Surf/03_eq_surf_np1"
+
+velocity nonRigidSurf create ${T} 56548 dist gaussian
+fix      mov_the_surface    nonRigidSurf nph x  1.0  1.0  $(50*dt)     y  1.0  1.0  $(50*dt) couple xy
+fix      thermo_the_surface nonRigidSurf temp/berendsen  ${T}  ${T}   0.005
+fix      bal all balance 300 1.1 rcb
+
+
+thermo_style    custom step time temp etotal pe ke evdwl epair pxx pyy pzz press vol v_surfThickness
+thermo_modify   lost warn
+log                                                ${basename}.log  
+dump     lmpdump  all custom  $(5*v_nstep_output)  ${basename}.lammpstrj id type x y z vx vy vz ix iy iz 
+thermo                        ${nstep_output}                                   
+run            ${nstep_run} 
+write_restart  ${basename}.lmprst
+
+quit

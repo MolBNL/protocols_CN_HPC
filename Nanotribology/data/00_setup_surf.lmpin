@@ -1,0 +1,38 @@
+print "... LOADING THE SURFACE SETUP, will perform a fake 'run 0' to compute and report the surface thickness"
+
+# from SurfMinZ           to surfRigidFraction will be rigid
+# from surfRigidFraction  to surfThermoFraction the thermostat will be applied
+# from surfThermoFraction to SurfMaxZ will be integrated in NVE
+
+variable surfThermoFraction equal 0.20
+
+# compute the max and min z values for the alumina atoms
+compute SurfMaxZ wholeSurface reduce max z
+compute SurfMinZ wholeSurface reduce min z
+
+thermo_style custom step c_SurfMaxZ c_SurfMinZ
+thermo 1
+run 0
+
+variable surfThickness          equal c_SurfMaxZ-c_SurfMinZ
+variable surfNonActiveThickness equal ${surfThickness}*${surfThermoFraction}
+variable surfActiveThickness    equal ${surfThickness}-${surfNonActiveThickness}
+
+variable surfThermoMaxZ      equal c_SurfMinZ+${surfNonActiveThickness}
+
+print """
+###################################################################################################################
+--> all units are in angstrom
+
+The surface min z is:             $(c_SurfMinZ)
+The computed thermoSurf max z is: ${surfThermoMaxZ}
+The surface max z is:             $(c_SurfMaxZ)
+
+The computed activeSurf thickness is: ${surfActiveThickness}
+The whole surface thickness is:       ${surfThickness}
+###################################################################################################################
+"""
+
+region    thermoSurf   block $(xlo) $(xhi) $(ylo) $(yhi) $(zlo) ${surfThermoMaxZ}
+
+

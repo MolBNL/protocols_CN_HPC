@@ -1,0 +1,42 @@
+print """
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+                       CREATE THE TIP ON TOP OF AN EQUILIBRATED SURFACE
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+"""
+
+read_restart      ./Surf/05_eq_surf_nv.lmprst
+include           00_setup_system.lmpin
+include           00_setup_surf.lmpin
+
+variable latticeSi equal 5.431
+lattice diamond ${latticeSi}    
+
+################################################################################################
+# set the tip dimensions in lattice numbers
+# should be increased to match the user needs
+################################################################################################
+variable NL_tip_radius       equal 2
+
+# Automatic convertion of dimensions to box units
+variable tip_radius          equal ${latticeSi}*${NL_tip_radius}
+
+
+##### TIP CREATION
+# above the center of the alumina in the x dimension
+variable tip_center_z        equal $(c_SurfMaxZ+2*v_tip_radius)
+region sphere  sphere $((xlo+xhi)/2) $(ylo+(1.3*v_tip_radius)) ${tip_center_z} ${tip_radius} units box 
+region efftip  block $(xlo) $(xhi) $(ylo) $(yhi) 0 ${tip_center_z} units box 
+region tip intersect 2 sphere efftip
+
+create_atoms 2 region tip
+
+group  tip  region tip
+
+group atomsSi type 2
+
+include       00_setup_tip.lmpin
+
+write_data    _wholeSys_topology.lmpdata
+write_restart _wholeSys_start.lmprst
+
+quit

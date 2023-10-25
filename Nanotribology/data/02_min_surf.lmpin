@@ -1,0 +1,28 @@
+print """
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+                       MINIMIZING THE SURFACE
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+"""
+
+read_restart      _surface_start.lmprst
+include           00_setup_system.lmpin
+include           00_setup_surf.lmpin
+# increase the number of steps as needed to equilibrate properly the system
+variable nstep_run equal 200 
+variable nstep_output equal 10
+variable basename string "./Surf/02_min_surf"
+
+thermo_style    custom step etotal pe evdwl epair
+thermo_modify   lost warn
+
+log                                         ${basename}.log 
+dump     lmpdump all custom $(2*v_nstep_output) ${basename}.lammpstrj id type x y z vx vy vz ix iy iz 
+thermo   ${nstep_output}
+
+fix 	 bal all balance 500 1.1 rcb
+
+minimize 1.0e-4 1.0e-6 ${nstep_run} $(v_nstep_run*10) 
+
+write_restart ${basename}.lmprst
+
+quit

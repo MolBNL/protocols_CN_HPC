@@ -1,0 +1,21 @@
+print "... LOADING THE SYSTEM SETUP"
+
+variable ts equal 0.001
+timestep     ${ts}
+variable T equal 300.0
+
+# LJ interactions will be used between Silica atoms and the alumina.
+# Interactions between Al and O atoms will be computed via the COMB3 forcefield.
+pair_style hybrid lj/cut 8.0 comb3 polar_off
+pair_coeff  * * comb3 ./FF/ffield.comb3.NiAlO Al NULL O
+pair_coeff  1 2 lj/cut 0.08264419  3.223    # Al Si
+pair_coeff  2 3 lj/cut 0.00375213  1.900    # Si  O
+pair_coeff  2 2 lj/cut 0.0  0.0    # Si  Si, dummy as they are rigid
+
+# WIP: This is a work in progress, currently the simulation crashes if this is turned on, but it is needed
+# for proper comb3 forcefield implementation. This will be fixed shortly.
+####### fix chargeEQ wholeSurface qeq/comb 5 0.00001
+
+comm_style tiled # inter processor communications, tiled because we have many empty spaces in the box
+balance    1.1 rcb
+

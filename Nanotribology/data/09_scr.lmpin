@@ -1,0 +1,57 @@
+# THE ind VARIABLE WILL BE DEFINED WHEN INVOKING THE SCRIPT FROM THE COMMAND LINE
+# IN THIS WAY THE SAME SCRIPT WILL BE USED FOR EACH INDENTATION
+print """
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+                      SCRATCHING WITH INDENTATION ${ind}
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+"""
+
+read_restart      ./Sys/08_ind.ind_${ind}.lmprst
+include           00_setup_system.lmpin
+include           00_setup_surf.lmpin
+include           00_setup_tip.lmpin
+
+
+variable nstep_output equal 10
+variable velY equal 10.0
+variable basename string "./Scr/09_scr_${ind}"
+
+neigh_modify  exclude type 2 2
+
+variable distTipSurf  equal  c_TipMinZ-c_SurfMaxZ
+variable distTipEdge  equal  yhi-c_TipMaxY
+thermo 1 
+thermo_style custom v_distTipSurf v_distTipEdge
+run 0
+
+fix         mov_the_surface nonRigidSurf nvt temp ${T} ${T} $(50.0*dt)  
+compute     thermostatSurfT nonRigidSurf temp/region thermoSurf
+fix_modify  mov_the_surface temp thermostatSurfT
+
+
+velocity         tip  set  0.0  ${velY}  0.0
+fix  normforce   tip  setforce  0.0  0.0  0.0
+fix  mov_the_tip tip  rigid/nve single reinit yes force * off on on
+fix  bal all balance 300 1.1 rcb
+
+compute friction tip group/group wholeSurface
+ 
+
+thermo_style    custom step time c_thermostatSurfT temp etotal pe ke evdwl epair pxx pyy pzz press vol &
+                  v_surfThickness v_distTipSurf v_distTipEdge &
+                  c_friction[1] c_friction[2] c_friction[3]
+thermo_modify   lost warn
+log                                                ${basename}.log  
+dump     lmpdump  all custom  $(5*v_nstep_output)  ${basename}.lammpstrj id type x y z vx vy vz ix iy iz 
+thermo                        ${nstep_output}                                   
+
+
+
+fix halting all halt 1 v_distTipEdge < 2.0 error continue
+run 999999999 
+
+write_restart ${basename}.lmprst
+write_data    ${basename}.rst.lmpdata
+
+quit
+

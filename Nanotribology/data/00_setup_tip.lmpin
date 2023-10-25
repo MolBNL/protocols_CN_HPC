@@ -1,0 +1,6 @@
+print "... LOADING THE TIP SETUP"
+# define computes for the tip minimum z value, the tip center of mass, and the tip max y value
+compute TipMinZ   tip         reduce min z
+compute TipCom    tip         com
+compute TipMaxY   tip         reduce max y
+

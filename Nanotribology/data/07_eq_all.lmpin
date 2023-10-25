@@ -1,0 +1,30 @@
+print """
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+                      EQUILIBRATE THE WHOLE SYSTEM IN NVT CONDITIONS
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+"""
+
+read_restart      _wholeSys_start.lmprst
+include           00_setup_system.lmpin
+include           00_setup_surf.lmpin
+include           00_setup_tip.lmpin
+# increase the number of steps as needed to equilibrate properly the system
+variable nstep_run    equal 1000
+variable nstep_output equal 50
+variable basename string "./Sys/07_eq"
+neigh_modify  exclude type 2 2
+fix         mov_the_tip     tip          rigid/nve single reinit yes force * off on on
+fix         mov_the_surface nonRigidSurf nvt temp ${T} ${T} $(50.0*dt)
+compute     thermostatSurfT nonRigidSurf temp/region thermoSurf
+fix_modify  mov_the_surface temp thermostatSurfT
+fix         bal all balance 500 1.1 rcb
+
+thermo_style    custom step time c_thermostatSurfT temp etotal pe ke evdwl epair pxx pyy pzz press vol v_surfThickness
+thermo_modify   lost warn
+log                                                ${basename}.log  
+dump     lmpdump  all custom  $(5*v_nstep_output)  ${basename}.lammpstrj id type x y z vx vy vz ix iy iz 
+thermo                        ${nstep_output}                                   
+run            ${nstep_run} 
+write_restart  ${basename}.lmprst
+
+quit

@@ -1,0 +1,67 @@
+print """
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+                      INDENT THE TIP
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-
+"""
+
+read_restart      ./Sys/07_eq.lmprst
+include           00_setup_system.lmpin
+include           00_setup_surf.lmpin
+include           00_setup_tip.lmpin
+
+variable nstep_output equal 10
+variable basename string "./Sys/08_ind"
+
+neigh_modify  exclude type 2 2
+
+variable distTipSurf  equal  c_TipMinZ-c_SurfMaxZ
+thermo 1 
+thermo_style custom v_distTipSurf
+run 0
+
+fix         mov_the_surface nonRigidSurf nvt temp ${T} ${T} $(50.0*dt)  
+compute     thermostatSurfT nonRigidSurf temp/region thermoSurf
+fix_modify  mov_the_surface temp thermostatSurfT
+
+thermo_style    custom step time c_thermostatSurfT temp etotal pe ke evdwl epair pxx pyy pzz press vol v_surfThickness v_distTipSurf
+thermo_modify   lost warn
+log                                                ${basename}.log  
+dump     lmpdump  all custom  $(5*v_nstep_output)  ${basename}.lammpstrj id type x y z vx vy vz ix iy iz 
+thermo                        ${nstep_output}                                   
+
+
+
+# FIRSTLY MOVE THE TIP DOWNWARD TO THE SURFACE,
+# HERE THE MOVEMENT WILL BE QUICK, AND WILL STOP ONCE THE
+# TIP WILL BE 3 ANGSTROM ABOVE THE ALUMINA SURFACE
+fix move_the_tip tip move linear 0.0 0.0 -10.0
+fix      bal all balance 200 1.1 rcb
+fix halting all halt 1 v_distTipSurf < 3.0 error continue
+run 999999999 
+unfix move_the_tip
+unfix bal
+
+
+# NOW WE DECREASE THE INDENTATION SPEED TO
+# AVOID TO PERTURBATE BADLY THE SURFACE
+fix move_the_tip tip move linear 0.0 0.0 -1.0
+fix      bal all balance 100 1.1 rcb
+
+# HERE WE ENTER A LOOP IN WHICH THE SIMULATION WILL RUN INDENTING THE TIP
+# AND HALTING EACH TIME THE DISTANCE BETWEEN THE SURFACE AND THE TIP WILL BE
+# CLOSE TO THE VALUE IN THE LIST DEFINED IN THE FOLLOWING COMMAND
+# (NOTE THAT THE VALUES MUST BE IN STRICT DECREASING ORDER...)
+variable s index 2 1 0 -1 -2 -3 -4 -5 -6
+# EACH TIME THE SELECED DITANCE IS REACHED, A RESTART FILE WILL BE CREATED,
+# THE REFERENCE DISTANCE WILL BE UPDATED TO THE NEXT VALUE,
+# AND THE SIMULATION WILL PROCEED. 
+label loop
+fix halting all halt 1 v_distTipSurf <= ${s} error continue
+run 999999999 
+write_restart ${basename}.ind_${s}.lmprst
+write_data    ${basename}.ind_${s}.lmpdata
+next s
+jump SELF loop
+
+quit
+
