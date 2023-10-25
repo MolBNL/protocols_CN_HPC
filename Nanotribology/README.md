@@ -24,7 +24,7 @@ Once the surface is properly equilibrated, the tip is created on top of the surf
 Finally, the whole system is properly equilibrated; the user can easily adjust the time of the simulation.
 
 ## STEP 08 
-In this step, the tip will be moved downwards toward the alumina surface. This will be done in two steps. Firstly, at a higher speed, the tip is lowered until it's located at $\textnormal{3 \unicode{x212B}}$ from the surface. Then the speed is decreased (the user can modify the speed if needed), and a "simulation loop" is started. 
+In this step, the tip will be moved downwards toward the alumina surface. This will be done in two steps. Firstly, at a higher speed, the tip is lowered until it's located at 3 Å from the surface. Then the speed is decreased (the user can modify the speed if needed), and a "simulation loop" is started. 
 In this loop, at each iteration, a reference distance will be selected from a list of values provided by the user (these values must strictly be in decreasing order). The tip will be lowered until its distance to the surface is really close to the reference distance. Then, a LAMMPS restart file will be written, the value of the reference distance will be updated to the next one, and the simulation will continue.
 
 ## STEP 09
